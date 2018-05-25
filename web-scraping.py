@@ -7,4 +7,8 @@ print(page.status_code)
 
 page_soup = bs(page.content, 'html.parser')
 #print(page_soup.prettify())
-print(list(page_soup.children))
+#print(list(page_soup.children))
+
+list = page_soup.select('.description h4')
+print(list)
+
