@@ -43,29 +43,34 @@ labels = response.label_annotations
 # Output is stored in list "Image_Label"
 
 #Containers for our output from Google Cloud Vision
-plant_output_gvision = []
+label_output_gvision = []
 score_output_gvision = []
 
 # Loop to get Google Cloud Vision
 for label in labels:
     #print(label.description, label.score)
-    plant_output_gvision.append(label.description)
+    label_output_gvision.append(label.description)
     score_output_gvision.append([label.score])
 
 # Container for final output from Google Cloud Vision in Pandas DataFrame format
 output_gvision = pandas.DataFrame()
 
 # Save Python lists as pandas series
-label_se = pandas.Series(plant_output_gvision)
+label_se = pandas.Series(label_output_gvision)
 score_se = pandas.Series(score_output_gvision)
 
 # Generate final Pandas DataFrame
 output_gvision['Label'] = label_se.values
 output_gvision['Score'] = score_se.values
 
+### Delete unwanted Labels from our output
 
+# Specify a blacklist
+blacklist = ('plant', 'herb', 'leaf')
 
-
-
+# Delete all labels and scores in output_gvision that
+# are listed in backlist
+for i in blacklist:
+    output_gvision = output_gvision[output_gvision.Label != i ]
 
 
