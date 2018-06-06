@@ -186,7 +186,7 @@ def sendto():
 
     server = smtplib.SMTP('patrickbuess.ch', 587)
     server.starttls()
-    server.login(fromaddr, "JoGVakPsQ2ffk8a$*")
+    server.login(fromaddr, "PASSWORD")
     text = msg.as_string()
     server.sendmail(fromaddr, toaddr, text)
     server.quit()
