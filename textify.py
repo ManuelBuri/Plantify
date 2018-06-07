@@ -72,19 +72,19 @@
 # You will find all necessary packages in textify_requirements.txt
 import io
 import os
+from os.path import basename
 from io import StringIO
 
 import re
 
 # tkinter GUI package
-import tkinter as tk
+import tkinter
 from tkinter import *
 from tkinter import filedialog
 
 # Package to send mails with attachments
 import smtplib
 import mimetypes
-from os.path import basename
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -123,7 +123,7 @@ gtranslate_functions = translate_v2.Client()
 gtexttospeech_functions = texttospeech.TextToSpeechClient()
 
 # Some tkinter stuff
-root = tk.Tk()
+root = tkinter.Tk()
 root.withdraw()
 
 
@@ -156,9 +156,6 @@ def loadimage():
     # Store the initally stored text in a separate variable for later retrieving
     text_output_original = text_output_gvision
 
-    # Option to remove line breaks from scanned text
-    # text_output_gvision = text_output_gvision.replace('\n', ' ').replace('\r', '')
-
     if text_output_gvision is '':
         is_there_text = False
         text.delete(0.0, END)
@@ -185,11 +182,7 @@ def addnew():
 
     output_gvision = response_gvision.full_text_annotation;
 
-
     text_output_gvision_new = output_gvision.text
-
-    # Option to remove line breaks from scanned text
-    # text_output_gvision_new = text_output_gvision_new.replace('\n', ' ').replace('\r', '')
 
     # Add additional text below the existing one and mark it
     text.insert(END, '\n #NEW SCAN\n')
@@ -205,16 +198,17 @@ def sendmail():
 
     # Open a pop-up window where the user can type in the address and choose an attachment
     mailinput = Tk()
+    mailinput.configure(background='#f2f2f2')
 
     # Set variable for checkbutton to zero
     varaudio = 0
 
     # Checkbutton for audio attachment
-    chk = Checkbutton(mailinput, text='Attach audio file', command=audiovariable)
+    chk = Checkbutton(mailinput, text='Attach audio file', command=audiovariable, background="#f2f2f2")
     chk.grid(columnspan=2, row=1)
 
     # Label for instructions
-    desc = Label(mailinput, text='Type in your recipient', font=('Arial Regular', 15))
+    desc = Label(mailinput, text='Type in your recipient', font=('Arial Regular', 15),  background="#f2f2f2")
     desc.grid(columnspan=2, row=0, pady=20)
 
     # Entry field for mailadress
@@ -222,7 +216,7 @@ def sendmail():
     mailadress.grid(column=0, row=2, pady=20, padx=20)
 
     # Send button
-    btnsend2 = Button(mailinput, text='Send', command=sendto)
+    btnsend2 = Button(mailinput, text='Send', command=sendto, height=2, width=15)
     btnsend2.grid(column=1, row=2, padx=20, pady=20)
 
     mailinput.mainloop()
@@ -288,7 +282,7 @@ def sendto():
     # Send mail from server
     server = smtplib.SMTP('patrickbuess.ch', 587)
     server.starttls()
-    server.login(fromaddr, "PASSWORD")
+    server.login(fromaddr, "JoGVakPsQ2ffk8a$*")
     text = msg.as_string()
     server.sendmail(fromaddr, toaddr, text)
     server.quit()
@@ -301,9 +295,10 @@ def tts():
 
     # Open a pop-up window
     ttsinput = Tk()
+    ttsinput.configure(background='#f2f2f2')
 
     # Lavel with instructions
-    desc = Label(ttsinput, text='Name your audio file', font=('Arial Regular', 15))
+    desc = Label(ttsinput, text='Name your audio file', font=('Arial Regular', 15), background='#f2f2f2')
     desc.grid(columnspan=2, row=0, pady=20)
 
     # Entry field to enter the name of the file
@@ -311,7 +306,7 @@ def tts():
     mp3name.grid(column=0, row=1, padx=20, pady=20)
 
     # Save button
-    btnsend3 = Button(ttsinput, text='Send', command=savemp3)
+    btnsend3 = Button(ttsinput, text='Save', command=savemp3, height=2, width=15)
     btnsend3.grid(column=1, row=1, padx=20, pady=20)
 
 
@@ -401,9 +396,10 @@ def searchwindow():
 
     # Open pop-up
     searchinput = Tk()
+    searchinput.configure(background='#f2f2f2')
 
     # Label with instruction
-    desc = Label(searchinput, text='Type in your search term', font=('Arial Regular', 15))
+    desc = Label(searchinput, text='Type in your search term', font=('Arial Regular', 15), background='#f2f2f2')
     desc.grid(columnspan=2, row=0, pady=20)
 
     # Entry field for search term
@@ -411,7 +407,7 @@ def searchwindow():
     term.grid(column=0, row=1, padx=20, pady=20)
 
     # Submit button
-    btnsend4 = Button(searchinput, text='Send', command=search)
+    btnsend4 = Button(searchinput, text='Search', command=search, height=2, width=15)
     btnsend4.grid(column=1, row=1, padx=20, pady=20)
 
 # Function which delivers the parameters to the search function
@@ -489,10 +485,10 @@ window.title("Welcome to Textify")
 window.configure(background='#f2f2f2')
 
 # Option to prevent resizing of window
-window.resizable(width=False, height=False)
+#window.resizable(width=False, height=False)
 
 # Retrieve image with logo from assets folder
-base_folder = os.path.dirname(__file__)
+base_folder = os.path.dirname('__file__')
 image_path = os.path.join(base_folder, 'assets/logo.png')
 photo = PhotoImage(file=image_path)
 
@@ -505,14 +501,16 @@ btnload = Button(window, text='Load Image', command=loadimage, height=2, width=1
 btnload.grid(column=0, row=1)
 
 # Textfield displaying the results
-text = Text(window, font=('Arial Regular', 12))
-text.insert(END, "Choose an image for analyis")
+f = open('initial.txt', 'r')
+message = f.read()
+text = Text(window, font=('Arial Regular', 12), height=50)
+text.insert(END, message)
 text.grid(column=1, row=0, rowspan=10, padx=20, pady=20)
 # Tag added to the matching words from the search function highlighting them yellow
 text.tag_config('found', background='yellow')
 
 # Button to add an image
-btnadd = Button(window, text='Add new', command=addnew, height=2, width=15)
+btnadd = Button(window, text='Add New Image', command=addnew, height=2, width=15)
 btnadd.grid(column=0, row=2)
 
 # Button that calls the pop up for sending an email
@@ -532,7 +530,7 @@ btnfacts = Button(window, text='Text Facts', command=getfacts, height=2, width=1
 btnfacts.grid(column=0, row=6)
 
 # Button that will exchange current textfield content with original one
-btnfacts = Button(window, text='Undo', command=undobtn, height=2, width=15)
+btnfacts = Button(window, text='Reset', command=undobtn, height=2, width=15)
 btnfacts.grid(column=0, row=7)
 
 # End of toplevel window
