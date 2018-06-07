@@ -1,0 +1,16 @@
+io
+os
+re
+tkinter
+smtplib
+mimetypes
+os.path
+email.mime.application
+email.mime.multipart
+email.mime.text
+email.mime.audio
+email
+email.mime.base
+email.utils
+google.cloud.vision
+google.cloud

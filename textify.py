@@ -1,4 +1,75 @@
-## Load Packages
+ ######## ######## ##     ## ######## #### ######## ##    ##
+    ##    ##        ##   ##     ##     ##  ##        ##  ##
+    ##    ##         ## ##      ##     ##  ##         ####
+    ##    ######      ###       ##     ##  ######      ##
+    ##    ##         ## ##      ##     ##  ##          ##
+    ##    ##        ##   ##     ##     ##  ##          ##
+    ##    ######## ##     ##    ##    #### ##          ##
+
+
+ # Textify,
+ # your image text extractor and analysis programme.
+ # Extract text from your images, process a sentiment analysis and generate a .mp3 file out of it.
+ # What is best, you can directly send the results to your mailbox.
+
+
+ # University of St. Gallen
+ # A "Programming for Quantitative Economics" project from:
+ #   Patrick Buess, 16-
+ #   Manuel Buri, 16-606-188
+
+
+ # Disclaimer:
+ # This programme could only be tested for Mac OS environment.
+ # Due to the fact that the two contributors do not have any access to windows environment.
+
+ # Futhermore we would like to emphasize, that our programm is able to process an image with the following specifications:
+     # Supported file formats:
+     # -JPEG
+     # -PNG8
+     # -PNG24
+     # -GIF
+     # -Animiertes GIF (only first frame)
+     # -BMP
+     # -WEBP
+     # -RAW
+     # -ICO
+
+     # Supported languages:
+     # - Chinese (simple)
+     # - Chinese (traditional)
+     # - English
+     # - French
+     # - German
+     # - Italian
+     # - Japan
+     # - Korean
+     # - Portuguese
+     # - Spanish
+
+     # Image file size:
+     # limited to a maximum of 4mb
+
+     # Image format size:
+     # For good results we recommend to use a format of 1.024 x 768.
+
+
+
+ # Table of contents:
+# - Import packages
+# - Initialising API and Google Cloud Functions
+# - Key Functions
+#   - Analyze text in an image
+#   - Add an additional image
+#   - Send results to your mail
+#   - Detect the language of the text
+#   - Generate an .mp3 file
+#   - Process the sentiment analysis
+
+
+
+## Import packages
+# You will find all necessary packages in textify_requirements.txt
 import io
 import os
 from io import StringIO
@@ -20,48 +91,61 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.utils import COMMASPACE, formatdate
 
-
 # Import Google libraries
-# For Google Cloud Vision Functions
+# Google Cloud Vision Functions
 from google.cloud import vision
 from google.cloud.vision import types as types_vision
-# For Google Natural Language Functions
+
+# Google Cloud Natural Language Functions
 from google.cloud import language
-# For Google Text-to-Speech Functions
+
+# Google Cloud Text-to-Speech Functions
 from google.cloud import texttospeech
+
+# Google Cloud Translation
 from google.cloud import translate_v2
 
-# Initialising
 
-# Set Google credentials
+
+## Initialising API, Google Cloud Functions and tkinter
+# Set Google Cloud API credentials
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "apikey.json"
+# Please save "apikey.json" in your project folder.
+
+# Initialize Google Cloud Functions
+# Google Cloud Vision
 gvision_functions = vision.ImageAnnotatorClient()
+# Google Cloud Translation
+gtranslate_functions = translate_v2.Client()
+# Google Cloud Text-To-Speech
+gtexttospeech_functions = texttospeech.TextToSpeechClient()
 
 # Some tkinter stuff
 root = tk.Tk()
 root.withdraw()
 
 
-# KEY FUNCTIONS
+## KEY FUNCTIONS
 
 # Function for loading the image at the beginning
 def loadimage():
     global text
     global text_output_original
 
-    # Allows us to choose a picture via finder/explorer
+    # Allows us to choose a picture via finder
     file_name = filedialog.askopenfilename()
 
     # Allows us to choose a picture in the project directory
     # file_name = 'Seiten aus Slides_Students.jpg'
 
-    # Opens the @patrick was bedeutet dies?
+    # Processes and defines the file_name as an image file
     with io.open(file_name, 'rb') as image_file:
         content = image_file.read();
 
     # image = image which is going to be analyzed
     image = types_vision.Image(content=content);
 
+    # We call the "document_text_detection"
     response_gvision = gvision_functions.document_text_detection(image=image);
 
     output_gvision = response_gvision.full_text_annotation;
@@ -82,8 +166,7 @@ def loadimage():
     return(text)
 
 
-
-# Add second text at the end
+# Add second/additional text from an image at the end of the first text
 def addnew():
     global btnadd
 
@@ -108,6 +191,7 @@ def addnew():
     text_output_gvision_new = text_output_gvision_new.replace('\n', ' ').replace('\r', '')
     text.insert(END, '\n #NEW SCAN\n')
     text.insert(END, text_output_gvision_new)
+
 
 # Send Mail with text to address of choosing
 def sendmail():
@@ -206,32 +290,33 @@ def tts():
     btnsend3.grid(column=1, row=1, padx=20, pady=20)
 
 
+# Function to detect the language of the text and
+# generate a .mp3 file out of the text.
 def savemp3formail():
     global text
 
-    gtranslate_functions = translate_v2.Client()
-
+    # Google Cloud Translation
+    # Call gtranslate_functions to detect the language of our images
     output_gtranslate = gtranslate_functions.detect_language(text.get(0.0, END))
-
+    # Extract the image code from output_gtranslate
+    # We will use language_code_output_gtranslate further for Text-to-Speech and the Sentiment Analysis
     language_code_output_gtranslate = (output_gtranslate['language'])
 
-    # Access Google Cloud Text-to-Speech Functions
-    # We can then run any function which is supported from the TextToSpeechClient
-    # via gtexttospeech_functions.
-    gtexttospeech_functions = texttospeech.TextToSpeechClient()
-
-    # define text which is going to be spoken
+    # Google Cloud Text-to-Speech
+    # Define text which is going to be spoken
     input_text = texttospeech.types.SynthesisInput(text=text.get(0.0, END))
 
-    # define the voice which is going to read the text
+    # Define the voice, language and gender of the speaker which is going to read the text
     voice = texttospeech.types.VoiceSelectionParams(
         language_code=language_code_output_gtranslate,
         ssml_gender=texttospeech.enums.SsmlVoiceGender.FEMALE)
 
-    # define which data format is going to be created
+    # Define which data format is going to be created
+    # We decided to go for a .mp3 format.
     audio_config = texttospeech.types.AudioConfig(
         audio_encoding=texttospeech.enums.AudioEncoding.MP3)
 
+    # Call gtexttospeech_functions to process the above defined parameters and produce a .mp3 file
     response_gtexttospeech = gtexttospeech_functions.synthesize_speech(input_text, voice, audio_config)
 
     # Here you can change the name of your .mp3 file
