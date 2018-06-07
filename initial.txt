@@ -1,0 +1,48 @@
+ ########   ########   ##     ##   ########   ####   ########   ##    ##
+       ##          ##                  ##   ##          ##            ##      ##                 ##  ##
+       ##          ##                   ## ##           ##            ##      ##                  ####
+       ##          ######            ###            ##            ##      ######           ##
+       ##          ##                   ## ##           ##            ##      ##                    ##
+       ##          ##                  ##   ##          ##            ##      ##                    ##
+       ##          ########   ##     ##          ##         ####    ##                    ##
+
+
+Textify, your image text extractor and analysis programme. Extract text from your images, process a sentiment analysis, search through it and generate a .mp3 file out of it. What is best, you can directly send the results to your mailbox.
+
+Disclaimer:
+This programm could only be tested for Mac OS environment.
+Due to the fact that the two contributors do not have any access to windows environment.
+
+Furthermore we would like to emphasize, that our programm is able to process an image with the following specifications:
+    
+     Supported file formats:
+     -JPEG
+     -PNG8
+     -PNG24
+     -GIF
+     -Animated GIF (only first frame)
+     -BMP
+     -WEBP
+     -RAW
+     -IC
+
+     Supported languages:
+     - Chinese (simple)
+     - Chinese (traditional)
+     - English
+     - French
+     - German
+     - Italian
+     - Japan
+     - Korean
+     - Portuguese
+     - Spanish
+
+     Image file size:
+     limited to a maximum of 4mb
+
+     Image format size:
+     For good results we recommend to use a format of 1.024 x 768.
+
+     Limitation for audio files: 
+     5000 characters
