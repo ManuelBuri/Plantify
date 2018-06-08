@@ -74,7 +74,6 @@ import io
 import os
 from os.path import basename
 from io import StringIO
-
 import re
 
 # tkinter GUI package
@@ -114,6 +113,8 @@ from google.cloud import translate_v2
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "apikey.json"
 # Please save "apikey.json" in your project folder.
 
+
+
 # Initialize Google Cloud Functions
 # Google Cloud Vision
 gvision_functions = vision.ImageAnnotatorClient()
@@ -122,23 +123,30 @@ gtranslate_functions = translate_v2.Client()
 # Google Cloud Text-To-Speech
 gtexttospeech_functions = texttospeech.TextToSpeechClient()
 
-# Some tkinter stuff
+
+
+# Some tkinter stuff, prevent small window from popping up next to our application
 root = tkinter.Tk()
 root.withdraw()
 
 
-## KEY FUNCTIONS
+
+#################################
+#                               #
+#       KEY FUNCTIONS           #
+#                               #
+#################################
+
+
 
 # Function for loading the image at the beginning
 def loadimage():
+    # Set variables used in other functions
     global text
     global text_output_original
 
     # Allows us to choose a picture via finder
     file_name = filedialog.askopenfilename()
-
-    # Allows us to choose a picture in the project directory
-    # file_name = 'Seiten aus Slides_Students.jpg'
 
     # Processes and defines the file_name as an image file
     with io.open(file_name, 'rb') as image_file:
@@ -156,6 +164,7 @@ def loadimage():
     # Store the initally stored text in a separate variable for later retrieving
     text_output_original = text_output_gvision
 
+    # If google vision cannot identify any text in the image, it will give out an error message, else the text
     if text_output_gvision is '':
         is_there_text = False
         text.delete(0.0, END)
@@ -164,8 +173,11 @@ def loadimage():
         text.delete(0.0, END)
         text.insert(END, text_output_gvision)
 
+
+
 # Add second/additional text from an image at the end of the first text
 def addnew():
+    # Set variables used in other functions
     global btnadd
 
     # Choose additional image for scanning
@@ -189,8 +201,10 @@ def addnew():
     text.insert(END, text_output_gvision_new)
 
 
+
 # Send Mail with text to address of choosing
 def sendmail():
+    # Set variables used in other functions
     global toaddr
     global mailinput
     global mailadress
@@ -198,9 +212,10 @@ def sendmail():
 
     # Open a pop-up window where the user can type in the address and choose an attachment
     mailinput = Tk()
+    # Set background of window
     mailinput.configure(background='#f2f2f2')
 
-    # Set variable for checkbutton to zero
+    # Set variable for audio checkbutton to zero
     varaudio = 0
 
     # Checkbutton for audio attachment
@@ -219,15 +234,27 @@ def sendmail():
     btnsend2 = Button(mailinput, text='Send', command=sendto, height=2, width=15)
     btnsend2.grid(column=1, row=2, padx=20, pady=20)
 
+    # End of window inputs
     mailinput.mainloop()
+
+
 
 # Function keeping track of the checkbutton, necessary because native option did not work
 def audiovariable():
+    # Set variables used in other functions
     global varaudio
+    global mp3
+
+    # If varaudio is 0 and function is called, set it to 1
+    # Mp3 variable keeps track of whether the audiofile in the savemp3() functions needs to be named
     if varaudio == 0:
         varaudio = 1
+        mp3 = 1
     else:
         varaudio = 0
+        mp3 = 0
+
+
 
 # Function needed to close the pop up windows
 def close_mailinput():
@@ -242,17 +269,21 @@ def close_searchinput():
     global searchinput
     searchinput.destroy()
 
-# Function executing the sending of the mail
+
+
+# Function executing sending of the mail
 def sendto():
+    # Set variables used in other functions
     global text
     global toaddr
     global mailadress
     global varaudio
 
+    # Define from and to adresses
     toaddr = mailadress.get()
     fromaddr = 'mail@patrickbuess.ch'
 
-    # Construct multipart message
+    # Construct multipart message and add the adresses and subject
     msg = MIMEMultipart()
     msg['From'] = fromaddr
     msg['To'] = toaddr
@@ -264,8 +295,14 @@ def sendto():
 
     # If checkbutton is checked, generate and add an audio file of the text
     if (varaudio == 1):
-        savemp3formail()
+
+        # Call savemp3() function to create an mp3 with the name audio
+        savemp3()
+
+        # Grab audiofile from project folder
         fileToSend = "Audio.mp3"
+
+        # define the encoding type for audio
         ctype, encoding = mimetypes.guess_type(fileToSend)
         if ctype is None or encoding is not None:
             ctype = "application/octet-stream"
@@ -280,21 +317,33 @@ def sendto():
         msg.attach(attachment)
 
     # Send mail from server
+    # The google gmail adress may make some problems if too many times the same email is sent to the same recipient
+    # Add other mail settings if necessary, make sure to also change the fromaddr
     server = smtplib.SMTP('patrickbuess.ch', 587)
     server.starttls()
     server.login(fromaddr, "JoGVakPsQ2ffk8a$*")
     text = msg.as_string()
     server.sendmail(fromaddr, toaddr, text)
     server.quit()
+
+    # Close pop-up window
     mailinput.destroy()
+
+
 
 # Function creating a mp3 of the loaded text:
 def tts():
+    # Set variables used in other functions
     global mp3name
     global ttsinput
+    global mp3
+
+    # Set mp3 variable to zero, indicating that we would like to name our audio file
+    mp3 = 0
 
     # Open a pop-up window
     ttsinput = Tk()
+    # Set window background
     ttsinput.configure(background='#f2f2f2')
 
     # Lavel with instructions
@@ -310,49 +359,14 @@ def tts():
     btnsend3.grid(column=1, row=1, padx=20, pady=20)
 
 
-# Function to detect the language of the text and
-# generate a .mp3 file out of the text, specifically
-# for the mail attachment as audio file name is fixed here
-def savemp3formail():
-    global text
-
-    # Google Cloud Translation
-    # Call gtranslate_functions to detect the language of our images
-    output_gtranslate = gtranslate_functions.detect_language(text.get(0.0, END))
-    # Extract the image code from output_gtranslate
-    # We will use language_code_output_gtranslate further for Text-to-Speech and the Sentiment Analysis
-    language_code_output_gtranslate = (output_gtranslate['language'])
-
-    # Google Cloud Text-to-Speech
-    # Define text which is going to be spoken
-    input_text = texttospeech.types.SynthesisInput(text=text.get(0.0, END))
-
-    # Define the voice, language and gender of the speaker which is going to read the text
-    voice = texttospeech.types.VoiceSelectionParams(
-        language_code=language_code_output_gtranslate,
-        ssml_gender=texttospeech.enums.SsmlVoiceGender.FEMALE)
-
-    # Define which data format is going to be created
-    # We decided to go for a .mp3 format.
-    audio_config = texttospeech.types.AudioConfig(
-        audio_encoding=texttospeech.enums.AudioEncoding.MP3)
-
-    # Call gtexttospeech_functions to process the above defined parameters and produce a .mp3 file
-    response_gtexttospeech = gtexttospeech_functions.synthesize_speech(input_text, voice, audio_config)
-
-    # Name of Audio file is prefixed as it must be found by the mail send function
-    nameyourtext = 'Audio'
-
-    # saves the .mp3 file with the individual file name in the project directory folder.
-    with open(nameyourtext + '.mp3', 'wb') as out:
-        out.write(response_gtexttospeech.audio_content)
 
 # Function to detect the language of the text and
 # generate a .mp3 file out of the text.
 def savemp3():
+    # Set variables used in other functions
     global ttsinput
     global text
-    global mp3name
+    global mp3
 
     # Call google translate client to determine language of text
     gtranslate_functions = translate_v2.Client()
@@ -380,22 +394,30 @@ def savemp3():
 
     response_gtexttospeech = gtexttospeech_functions.synthesize_speech(input_text, voice, audio_config)
 
-    # Here you can change the name of your .mp3 file
-    nameyourtext = mp3name.get()
+    # Here the name of the .mp3 file will be set
+    # If mp3 == 1, we name our file audio so we can easily grab it from the project folder, else we take the textbox entry content
+    if (mp3 == 1):
+        nameyourtext = 'Audio'
+    else:
+        nameyourtext = mp3name.get()
+
+        # Close the pop-up window
+        close_ttsinput()
 
     # saves the .mp3 file with the individual file name in the project directory folder.
     with open(nameyourtext + '.mp3', 'wb') as out:
         out.write(response_gtexttospeech.audio_content)
 
-    # Close the pop-up window
-    close_ttsinput()
+
 
 # Function which generates a pop-up window for search terms
 def searchwindow():
+    # Set variables used in other functions
     global term
 
     # Open pop-up
     searchinput = Tk()
+    # Set background color
     searchinput.configure(background='#f2f2f2')
 
     # Label with instruction
@@ -410,14 +432,11 @@ def searchwindow():
     btnsend4 = Button(searchinput, text='Search', command=search, height=2, width=15)
     btnsend4.grid(column=1, row=1, padx=20, pady=20)
 
-# Function which delivers the parameters to the search function
-def searchterm():
-    global term
-    global text
-    search(text, term, 'found')
+
 
 # Search function
 def search():
+    # Set variables used in other functions
     global term
 
     # Start at beginning of text field
@@ -427,15 +446,18 @@ def search():
         idx = text.search(term.get(), pos, END)
         if not idx:
             break
-        # If match is found, add a tag which adds a yellow
+        # If match is found, add a tag which adds a yellow background, defined at the end
         pos = '{}+{}c'.format(idx, len(term.get()))
         text.tag_add('found', idx, pos)
 
     # Close pop-up window
     close_searchinput()
 
+
+
 # Function adding textfacts and sentiment analysis results at the top
 def getfacts():
+    # Set variables used in other functions
     global text
 
     # Assess which language the text is written in, so the sentiment analysis works
@@ -461,7 +483,7 @@ def getfacts():
     # Store text in more practical variable
     s = text.get(0.0, END)
 
-    # Count the number of characters, words and phrases of text
+    # Count the number of characters, words and phrases of text and convert the number to string
     characters = str(len(s))
     words = str(len(re.findall(r'\w+', s)))
     phrases = str(len(re.split(r'[.!?]+', s)))
@@ -469,27 +491,42 @@ def getfacts():
     # Insert infos at the beginning of the text
     text.insert(1.0, 'Textfacts \n\nCharacters: ' + characters + '\nWords: ' + words + '\nSentences: ' + phrases + '\n\nScore: ' + s_score + '\nThe score tells us the overall emotional sentiment in the text. 1 = very positive, -1 = very negative.\n\nMagnitude: ' + s_mag + '\nThe magnitude illustrates the amount of emotional (positive and negative) content in a text. The longer a text the higher its magnitude.\n\n')
 
+
+
 # Function for undo button: Retrieving the text stored in a separate variable at the beginning
 def undobtn():
+    # Set variables used in other functions
     global text_output_original
     global text
 
+    # Delete the textbox content and replace it with the initial content from "load image" stored in separate variable
     text.delete(0.0, END)
     text.insert(END, text_output_original)
 
-# Application
+
+
+#################################
+#                               #
+#         Application           #
+#                               #
+#################################
+
+
 
 # Create toplevel window, containing our application
 window = Toplevel()
+# Set title
 window.title("Welcome to Textify")
+# Set background color
 window.configure(background='#f2f2f2')
 
 # Option to prevent resizing of window
-#window.resizable(width=False, height=False)
+window.resizable(width=False, height=False)
 
 # Retrieve image with logo from assets folder
 base_folder = os.path.dirname('__file__')
 image_path = os.path.join(base_folder, 'assets/logo.png')
+# Place image in photo variable
 photo = PhotoImage(file=image_path)
 
 # Title field contains logo
@@ -500,10 +537,13 @@ title.grid(column=0, row=0, padx=20, pady=20)
 btnload = Button(window, text='Load Image', command=loadimage, height=2, width=15)
 btnload.grid(column=0, row=1)
 
-# Textfield displaying the results
+# Read the initial text from a .txt file in our project folder
 f = open('initial.txt', 'r')
 message = f.read()
+
+# Textfield displaying the results
 text = Text(window, font=('Arial Regular', 12), height=50)
+# Insert the text from the .txt file read above
 text.insert(END, message)
 text.grid(column=1, row=0, rowspan=10, padx=20, pady=20)
 # Tag added to the matching words from the search function highlighting them yellow
